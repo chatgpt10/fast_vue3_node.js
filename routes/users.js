@@ -1,28 +1,8 @@
 const router = require("koa-router")();
+const ctlUser = require("../controller/user");
 const { User } = require("../models");
-router.prefix("/users");
-
 // 查询所有用户
-router.get("/list", async (ctx) => {
-  await User.find()
-    .then((res) => {
-      if (res) {
-        ctx.body = {
-          code: 200,
-          msg: "查询成功",
-          data: res,
-        };
-      } else {
-        ctx.body = {
-          code: 400,
-          msg: "查询失败",
-        };
-      }
-    })
-    .catch((error) => {
-      console.error("查询出现异常", error);
-    });
-});
+router.get("/list", ctlUser.getAllUsers);
 // 查询用户
 router.get("/user/:id", async (ctx) => {
   let { id } = ctx.params;
@@ -47,11 +27,14 @@ router.get("/user/:id", async (ctx) => {
 });
 // 添加用户
 router.post("/add", async (ctx) => {
-  let { username, pwd } = ctx.request.body;
-  console.log("username", ctx.request);
+  let { username, password, email, isVip, address, avatar } = ctx.request.body;
   await User.create({
     username,
-    pwd,
+    password,
+    email,
+    isVip,
+    address,
+    avatar,
   })
     .then((res) => {
       if (res) {
@@ -73,35 +56,7 @@ router.post("/add", async (ctx) => {
 });
 
 // 用户信息修改
-router.post("/update", async (ctx) => {
-  let { _id, username, pwd } = ctx.request.body;
-  await User.updateOne(
-    {
-      _id: _id,
-    },
-    {
-      username: username,
-      pwd: pwd,
-    }
-  )
-    .then((res) => {
-      if (res) {
-        ctx.body = {
-          code: 200,
-          msg: "修改成功",
-          data: res,
-        };
-      } else {
-        ctx.body = {
-          code: 400,
-          msg: "修改失败",
-        };
-      }
-    })
-    .catch((error) => {
-      console.error("修改出现异常", error);
-    });
-});
+router.post("/update", ctlUser.EditUser);
 
 // 删除用户
 router.delete("/del", async (ctx) => {
@@ -127,4 +82,29 @@ router.delete("/del", async (ctx) => {
       console.error("删除出现异常", error);
     });
 });
+
+//------ 模拟登录测试--------
+router.post("/login", async (ctx) => {
+  let { username } = ctx.request.body;
+  await User.findOne({ username: username })
+    .then((res) => {
+      if (res) {
+        ctx.body = {
+          code: 200,
+          msg: "登录成功",
+          data: res,
+        };
+      } else {
+        ctx.body = {
+          code: 400,
+          msg: "登录失败,用户名不正确！",
+          data: res,
+        };
+      }
+    })
+    .catch((error) => {
+      console.error("登录出现异常", error);
+    });
+});
+
 module.exports = router;
